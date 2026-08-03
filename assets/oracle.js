@@ -1,4 +1,5 @@
-const DATA_URL = 'assets/data/articles.json';
+const ASSET_VERSION = '20260803b';
+const DATA_URL = `assets/data/articles.json?v=${ASSET_VERSION}`;
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGKQTLj_6e8cvjt01huQ4vX81v3iSnrVaY94aVGae2f7XrS9NIosb5WZYPDYIL9QE1DVax9jp6vrfR/pub?output=csv';
 const STORE_KEY = 'aetheria-oracle-records-v1';
 
@@ -50,6 +51,13 @@ const K = {
   title: '\u6a19\u984c',
   live: '\u4e0a\u67b6',
 };
+
+function assetUrl(src) {
+  const value = String(src || '').trim();
+  if (!value) return '';
+  if (/^(https?:|data:|mailto:)/i.test(value)) return value;
+  return value.includes('?') ? `${value}&v=${ASSET_VERSION}` : `${value}?v=${ASSET_VERSION}`;
+}
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -190,7 +198,7 @@ function card(article) {
   const image = article.coverImage || article.images[0] || '';
   return `
     <a class="article-card" href="article.html?id=${encodeURIComponent(article.id)}">
-      <img src="${escapeHtml(image)}" alt="${escapeHtml(article.title)}" loading="lazy">
+      <img src="${escapeHtml(assetUrl(image))}" alt="${escapeHtml(article.title)}" loading="lazy">
       <div class="article-body">
         <div class="meta">${escapeHtml(article.code)}</div>
         <h3>${escapeHtml(article.title)}</h3>
@@ -356,7 +364,7 @@ async function renderArticle() {
     ? `<div class="carousel-shell" data-carousel>
         <button class="carousel-arrow carousel-prev" type="button" aria-label="${T.prev}">\u2039</button>
         <div class="image-carousel" aria-label="${T.cardAlt}">
-          ${article.images.map((src, index) => `<img src="${escapeHtml(src)}" alt="${escapeHtml(article.title)} ${index + 1}" loading="lazy">`).join('')}
+          ${article.images.map((src, index) => `<img src="${escapeHtml(assetUrl(src))}" alt="${escapeHtml(article.title)} ${index + 1}" loading="lazy">`).join('')}
         </div>
         <button class="carousel-arrow carousel-next" type="button" aria-label="${T.next}">\u203a</button>
         <div class="carousel-dots" aria-hidden="true">
