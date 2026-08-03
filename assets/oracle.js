@@ -2,10 +2,65 @@ const DATA_URL = 'assets/data/articles.json';
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGKQTLj_6e8cvjt01huQ4vX81v3iSnrVaY94aVGae2f7XrS9NIosb5WZYPDYIL9QE1DVax9jp6vrfR/pub?output=csv';
 const STORE_KEY = 'aetheria-oracle-records-v1';
 
+const T = {
+  allCopied: '\u5df2\u8907\u88fd\u5168\u90e8\u7d00\u9304',
+  article: '\u5360\u535c',
+  articleEnter: '\u9032\u5165\u5360\u535c \u2192',
+  cardAlt: '\u5360\u535c\u5716\u7247',
+  choice: '\u9078\u9805',
+  choiceLabel: '\u6211\u9019\u6b21\u9078\u5230',
+  choicePlaceholder: '\u4f8b\u5982\uff1aA1B2F3\uff0c\u4e5f\u53ef\u4ee5\u91cd\u8907\u9078\u540c\u4e00\u5f35\u5716',
+  clearConfirm: '\u78ba\u5b9a\u6e05\u7a7a\u6240\u6709\u7d00\u9304\u55ce\uff1f',
+  copied: '\u5df2\u8907\u88fd\u7d00\u9304',
+  date: '\u65e5\u671f',
+  deleted: '\u5df2\u522a\u9664',
+  deleteLabel: '\u522a\u9664',
+  downloadName: 'Aetheria\u5360\u535c\u7d00\u9304.doc',
+  emptyRecords: '\u76ee\u524d\u9084\u6c92\u6709\u5132\u5b58\u7684\u5360\u535c\u7d00\u9304\u3002',
+  fallbackExcerpt: '\u9032\u5165\u6587\u7ae0\uff0c\u6162\u6162\u770b\u898b\u9019\u6b21\u88ab\u4f60\u9078\u4e2d\u7684\u8a0a\u606f\u3002',
+  hint: '\u6bcf\u7bc7\u5360\u535c\u898f\u5247\u4e0d\u540c\uff0c\u53ef\u4ee5\u586b A\u30011+3 \u6216 A1B2F3\u3002\u5982\u679c\u540c\u4e00\u5f35\u5716\u91cd\u8907\u88ab\u4f60\u9078\u5230\uff0c\u4e5f\u53ef\u4ee5\u7167\u5be6\u8a18\u4e0b\u3002',
+  menu: '\u624b\u6a5f\u5c0e\u89bd',
+  next: '\u4e0b\u4e00\u5f35',
+  noNote: '\u672a\u586b\u5beb',
+  noSelectedMessages: '\u6c92\u6709\u81ea\u52d5\u5c0d\u61c9\u5230\u9078\u9805\u5167\u5bb9\u3002',
+  note: '\u7576\u4e0b\u611f\u53d7',
+  noteLabel: '\u7576\u4e0b\u611f\u53d7',
+  notePlaceholder: '\u9019\u6b21\u6211\u770b\u898b\u2026\u2026',
+  prev: '\u4e0a\u4e00\u5f35',
+  recordSaved: '\u5df2\u5132\u5b58\u9019\u6b21\u5360\u535c\u7d00\u9304',
+  recordTitle: 'Aetheria Art Soul\uff5c\u5360\u535c\u7d00\u9304',
+  save: '\u5132\u5b58\u5230\u6211\u7684\u7d00\u9304',
+  selectedMessages: '\u9019\u6b21\u9078\u9805\u5c0d\u61c9\u7684\u8a0a\u606f',
+  viewRecords: '\u67e5\u770b\u6211\u7684\u7d00\u9304',
+};
+
+const K = {
+  content: '\u5360\u535c\u5167\u5bb9',
+  cover: '\u5c01\u9762\u5716',
+  date: '\u767c\u5e03\u65e5\u671f',
+  excerpt: '\u9996\u9801\u7c21\u4ecb',
+  gallery: '\u8f2a\u64ad\u5716\u7247',
+  hint: '\u7d00\u9304\u63d0\u793a',
+  intro: '\u524d\u8a00',
+  sort: '\u6392\u5e8f',
+  status: '\u72c0\u614b',
+  title: '\u6a19\u984c',
+  live: '\u4e0a\u67b6',
+};
+
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 const getRecords = () => JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
 const setRecords = (items) => localStorage.setItem(STORE_KEY, JSON.stringify(items));
+
+function escapeHtml(value) {
+  return String(value || '').replace(/[&<>"]/g, (match) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+  }[match]));
+}
 
 function toast(text) {
   const el = $('#toast') || document.createElement('div');
@@ -22,7 +77,6 @@ function parseCsv(text) {
   let row = [];
   let cell = '';
   let quoted = false;
-
   for (let i = 0; i < text.length; i += 1) {
     const ch = text[i];
     const next = text[i + 1];
@@ -50,7 +104,6 @@ function parseCsv(text) {
     }
     cell += ch;
   }
-
   row.push(cell);
   if (row.some((value) => value.trim())) rows.push(row);
   return rows;
@@ -58,7 +111,7 @@ function parseCsv(text) {
 
 function sanitizeText(value) {
   return String(value || '')
-    .replace(/(?:哀居|脆|分頁)\s*\d*/g, '')
+    .replace(/(?:\u54c0\u5c45|\u8106|\u5206\u9801)\s*\d*/g, '')
     .replace(/[\uFE0E\uFE0F\u20E3]/g, '')
     .replace(/[\u{1F000}-\u{1FAFF}]/gu, '')
     .replace(/[\u2600-\u27BF]/g, '')
@@ -80,13 +133,9 @@ function directImageUrl(url) {
 function articlesFromCsv(text) {
   const rows = parseCsv(text);
   if (rows.length < 2) return [];
-
   const heads = rows[0].map((head) => head.trim());
   const pick = (row, ...keys) => keys.map((key) => row[key]).find((value) => value !== undefined && String(value).trim() !== '') || '';
-  const splitImages = (value) => String(value || '')
-    .split(/[|｜]/)
-    .map((item) => directImageUrl(item))
-    .filter(Boolean);
+  const splitImages = (value) => String(value || '').split(/[|｜]/).map(directImageUrl).filter(Boolean);
   const splitText = (value) => String(value || '')
     .replace(/\r/g, '')
     .split(/\n+|\|/g)
@@ -97,28 +146,27 @@ function articlesFromCsv(text) {
     .map((row) => Object.fromEntries(heads.map((head, index) => [head, row[index] || ''])))
     .filter((row) => pick(row, 'id'))
     .filter((row) => {
-      const status = pick(row, '狀態', 'status');
-      return !status || status === '上架';
+      const status = pick(row, K.status, 'status');
+      return !status || status === K.live;
     })
     .map((row) => {
-      const cover = directImageUrl(pick(row, '封面圖', 'cover', 'coverImage'));
-      const gallery = splitImages(pick(row, '輪播圖片', 'images', 'gallery'));
-      const introParagraphs = splitText(pick(row, '前言', 'intro'));
-      const contentParagraphs = splitText(pick(row, '占卜內容', 'paragraphs', 'content'));
-
+      const cover = directImageUrl(pick(row, K.cover, 'cover', 'coverImage'));
+      const gallery = splitImages(pick(row, K.gallery, 'images', 'gallery'));
+      const introParagraphs = splitText(pick(row, K.intro, 'intro'));
+      const contentParagraphs = splitText(pick(row, K.content, 'paragraphs', 'content'));
       return {
         id: pick(row, 'id'),
         code: pick(row, 'code'),
-        sort: Number(pick(row, '排序', 'sort')) || 9999,
-        title: sanitizeText(pick(row, '標題', 'title')),
-        excerpt: sanitizeText(pick(row, '首頁簡介', 'excerpt')),
-        published: pick(row, '發布日期', 'published'),
+        sort: Number(pick(row, K.sort, 'sort')) || 9999,
+        title: sanitizeText(pick(row, K.title, 'title')),
+        excerpt: sanitizeText(pick(row, K.excerpt, 'excerpt')),
+        published: pick(row, K.date, 'published'),
         coverImage: cover || gallery[0] || '',
         images: gallery.filter(Boolean),
         introParagraphs,
         contentParagraphs,
         paragraphs: [...introParagraphs, ...contentParagraphs],
-        recordHint: sanitizeText(pick(row, '紀錄提示', 'recordHint')),
+        recordHint: sanitizeText(pick(row, K.hint, 'recordHint')),
       };
     })
     .sort((a, b) => a.sort - b.sort || String(a.code).localeCompare(String(b.code)));
@@ -135,16 +183,16 @@ async function loadArticles() {
 }
 
 function card(article) {
-  const excerpt = article.excerpt || '進入文章，慢慢看見這次被你選中的訊息。';
+  const excerpt = article.excerpt || T.fallbackExcerpt;
   const image = article.coverImage || article.images[0] || '';
   return `
     <a class="article-card" href="article.html?id=${encodeURIComponent(article.id)}">
-      <img src="${image}" alt="${article.title}" loading="lazy">
+      <img src="${escapeHtml(image)}" alt="${escapeHtml(article.title)}" loading="lazy">
       <div class="article-body">
-        <div class="meta">${article.code}</div>
-        <h3>${article.title}</h3>
-        <p class="muted">${excerpt}</p>
-        <span>進入占卜 →</span>
+        <div class="meta">${escapeHtml(article.code)}</div>
+        <h3>${escapeHtml(article.title)}</h3>
+        <p class="muted">${escapeHtml(excerpt)}</p>
+        <span>${T.articleEnter}</span>
       </div>
     </a>
   `;
@@ -157,28 +205,59 @@ async function renderIndex() {
   root.innerHTML = articles.map(card).join('');
 }
 
+function normalizeToken(token) {
+  return String(token || '').trim().toUpperCase();
+}
+
+function parseChoiceTokens(choice) {
+  return String(choice || '')
+    .toUpperCase()
+    .match(/[A-Z]|\d+/g) || [];
+}
+
+function paragraphToken(paragraph) {
+  const text = String(paragraph || '').trim();
+  const match = text.match(/^[\s\u25ae\u25aa\u25cf\u2022\-]*([A-Z]|\d+)\s*(?:[|｜、.．:：\s]|$)/i);
+  return match ? normalizeToken(match[1]) : '';
+}
+
+function selectedMessagesFromChoice(choice, paragraphs) {
+  const tokens = parseChoiceTokens(choice);
+  const used = new Set();
+  const matches = [];
+  tokens.forEach((token) => {
+    const normalized = normalizeToken(token);
+    const index = paragraphs.findIndex((paragraph, paragraphIndex) => paragraphToken(paragraph) === normalized && !used.has(paragraphIndex));
+    if (index >= 0) {
+      used.add(index);
+      matches.push(paragraphs[index]);
+    }
+  });
+  return matches;
+}
+
 async function renderArticle() {
   const root = $('#articlePage');
   if (!root) return;
-
   const params = new URLSearchParams(location.search);
   const id = params.get('id');
   const articles = await loadArticles();
   const article = articles.find((item) => item.id === id) || articles[0];
+  document.title = `${article.title}\uff5cAetheria Art Soul`;
 
-  document.title = `${article.title}｜Aetheria Art Soul`;
-
-  const intro = (article.introParagraphs && article.introParagraphs.length)
-    ? article.introParagraphs
-    : (article.paragraphs || []).slice(0, 1);
-  const body = (article.contentParagraphs && article.contentParagraphs.length)
-    ? article.contentParagraphs
-    : (article.paragraphs || []).slice(intro.length);
-  const hint = article.recordHint || '每篇占卜規則不同，可以填 A、1+3 或 A1B2F3。如果同一張圖重複被你選到，也可以照實記下。';
-
+  const intro = article.introParagraphs && article.introParagraphs.length ? article.introParagraphs : (article.paragraphs || []).slice(0, 1);
+  const body = article.contentParagraphs && article.contentParagraphs.length ? article.contentParagraphs : (article.paragraphs || []).slice(intro.length);
+  const hint = article.recordHint || T.hint;
   const carousel = (article.images || []).length
-    ? `<div class="image-carousel" aria-label="占卜圖片">
-        ${article.images.map((src) => `<img src="${src}" alt="${article.title}" loading="lazy">`).join('')}
+    ? `<div class="carousel-shell" data-carousel>
+        <button class="carousel-arrow carousel-prev" type="button" aria-label="${T.prev}">\u2039</button>
+        <div class="image-carousel" aria-label="${T.cardAlt}">
+          ${article.images.map((src, index) => `<img src="${escapeHtml(src)}" alt="${escapeHtml(article.title)} ${index + 1}" loading="lazy">`).join('')}
+        </div>
+        <button class="carousel-arrow carousel-next" type="button" aria-label="${T.next}">\u203a</button>
+        <div class="carousel-dots" aria-hidden="true">
+          ${article.images.map((_, index) => `<span class="${index === 0 ? 'active' : ''}"></span>`).join('')}
+        </div>
       </div>`
     : '';
 
@@ -186,59 +265,103 @@ async function renderArticle() {
     <div class="article-layout">
       <main>
         <article class="reading article-reading">
-          <div class="meta">${article.code}</div>
-          <h1>${article.title}</h1>
-          <div class="article-intro">${intro.map((paragraph) => `<p>${paragraph}</p>`).join('')}</div>
+          <div class="meta">${escapeHtml(article.code)}</div>
+          <h1>${escapeHtml(article.title)}</h1>
+          <div class="article-intro">${intro.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}</div>
           ${carousel}
-          <div class="article-content">${body.map((paragraph) => `<p>${paragraph}</p>`).join('')}</div>
+          <div class="article-content">${body.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}</div>
         </article>
       </main>
       <aside class="choice-box">
-        <h2>記錄這次訊息</h2>
-        <p class="muted">${hint}</p>
+        <h2>${T.save.replace('\u5132\u5b58\u5230', '\u8a18\u9304')}</h2>
+        <p class="muted">${escapeHtml(hint)}</p>
         <div class="field">
-          <label>我這次選到</label>
-          <input id="choiceInput" type="text" placeholder="例如：A1B2F3，也可以重複選同一張圖">
+          <label>${T.choiceLabel}</label>
+          <input id="choiceInput" type="text" placeholder="${T.choicePlaceholder}">
         </div>
         <div class="field">
-          <label>當下感受</label>
-          <textarea id="noteInput" placeholder="這次我看見……"></textarea>
+          <label>${T.noteLabel}</label>
+          <textarea id="noteInput" placeholder="${T.notePlaceholder}"></textarea>
         </div>
-        <button class="btn" id="saveRecord">儲存到我的紀錄</button>
-        <a class="btn secondary" href="records.html">查看我的紀錄</a>
+        <button class="btn" id="saveRecord">${T.save}</button>
+        <a class="btn secondary" href="records.html">${T.viewRecords}</a>
       </aside>
     </div>
   `;
 
   $('#saveRecord').addEventListener('click', () => {
     const records = getRecords();
-    const choice = ($('#choiceInput').value || '').trim() || '未填寫';
+    const choice = ($('#choiceInput').value || '').trim() || T.noNote;
+    const selectedMessages = selectedMessagesFromChoice(choice, body);
     records.unshift({
       id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
       articleId: article.id,
       code: article.code,
       title: article.title,
       choice,
+      selectedMessages,
       note: $('#noteInput').value.trim(),
       date: new Date().toISOString(),
     });
     setRecords(records);
-    toast('已儲存這次占卜紀錄');
+    toast(T.recordSaved);
+  });
+  initCarousels(root);
+}
+
+function initCarousels(root = document) {
+  $$('[data-carousel]', root).forEach((shell) => {
+    const track = $('.image-carousel', shell);
+    const slides = $$('img', track);
+    const dots = $$('.carousel-dots span', shell);
+    const prev = $('.carousel-prev', shell);
+    const next = $('.carousel-next', shell);
+    if (!track || slides.length <= 1) {
+      if (prev) prev.hidden = true;
+      if (next) next.hidden = true;
+      return;
+    }
+    const slideTo = (direction) => {
+      const current = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+      const target = Math.max(0, Math.min(slides.length - 1, current + direction));
+      track.scrollTo({ left: slides[target].offsetLeft - track.offsetLeft, behavior: 'smooth' });
+    };
+    const update = () => {
+      const center = track.scrollLeft + track.clientWidth / 2;
+      let active = 0;
+      slides.forEach((slide, index) => {
+        const slideCenter = slide.offsetLeft + slide.clientWidth / 2;
+        if (Math.abs(slideCenter - center) < Math.abs((slides[active].offsetLeft + slides[active].clientWidth / 2) - center)) active = index;
+      });
+      dots.forEach((dot, index) => dot.classList.toggle('active', index === active));
+      prev.disabled = active === 0;
+      next.disabled = active === slides.length - 1;
+    };
+    prev.addEventListener('click', () => slideTo(-1));
+    next.addEventListener('click', () => slideTo(1));
+    track.addEventListener('scroll', () => requestAnimationFrame(update), { passive: true });
+    update();
   });
 }
 
+function selectedMessagesText(record) {
+  const messages = record.selectedMessages || [];
+  if (!messages.length) return T.noSelectedMessages;
+  return messages.map((message) => `- ${message}`).join('\n');
+}
+
 function recordText(record) {
-  return `Aetheria Art Soul｜占卜紀錄\n\n日期：${new Date(record.date).toLocaleString('zh-TW')}\n占卜：${record.title}\n選項：${record.choice}\n\n當下感受：\n${record.note || '未填寫'}\n`;
+  return `${T.recordTitle}\n\n${T.date}\uff1a${new Date(record.date).toLocaleString('zh-TW')}\n${T.article}\uff1a${record.title}\n${T.choice}\uff1a${record.choice}\n\n${T.selectedMessages}\uff1a\n${selectedMessagesText(record)}\n\n${T.note}\uff1a\n${record.note || T.noNote}\n`;
 }
 
 function downloadDoc() {
   const records = getRecords();
   const body = records.map(recordText).join('\n------------------------------\n\n');
-  const html = `<html><head><meta charset="utf-8"></head><body><pre style="font-family:'Microsoft JhengHei',sans-serif;white-space:pre-wrap;line-height:1.8">${body.replace(/[&<>]/g, (match) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[match]))}</pre></body></html>`;
+  const html = `<html><head><meta charset="utf-8"></head><body><pre style="font-family:'Microsoft JhengHei',sans-serif;white-space:pre-wrap;line-height:1.8">${escapeHtml(body)}</pre></body></html>`;
   const blob = new Blob([html], { type: 'application/msword' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = 'Aetheria占卜紀錄.doc';
+  link.download = T.downloadName;
   link.click();
   URL.revokeObjectURL(link.href);
 }
@@ -248,33 +371,36 @@ function renderRecords() {
   if (!root) return;
   const records = getRecords();
   if (!records.length) {
-    root.innerHTML = '<div class="empty">目前還沒有儲存的占卜紀錄。</div>';
+    root.innerHTML = `<div class="empty">${T.emptyRecords}</div>`;
     return;
   }
-
   root.innerHTML = records.map((record) => `
     <article class="record-card">
       <div class="meta">${new Date(record.date).toLocaleDateString('zh-TW')}</div>
-      <h3>${record.title}</h3>
-      <p><strong>${record.choice}</strong></p>
-      <p class="muted">${(record.note || '未填寫感受').replace(/</g, '&lt;')}</p>
+      <h3>${escapeHtml(record.title)}</h3>
+      <p><strong>${escapeHtml(record.choice)}</strong></p>
+      <div class="record-selected">
+        <strong>${T.selectedMessages}</strong>
+        ${(record.selectedMessages || []).length
+          ? `<ul>${record.selectedMessages.map((message) => `<li>${escapeHtml(message)}</li>`).join('')}</ul>`
+          : `<p class="muted">${T.noSelectedMessages}</p>`}
+      </div>
+      <p class="muted">${escapeHtml(record.note || T.noNote)}</p>
       <div class="record-actions">
-        <button class="btn secondary" data-copy="${record.id}">複製</button>
-        <button class="btn secondary" data-delete="${record.id}">刪除</button>
+        <button class="btn secondary" data-copy="${record.id}">\u8907\u88fd</button>
+        <button class="btn secondary" data-delete="${record.id}">${T.deleteLabel}</button>
       </div>
     </article>
   `).join('');
-
   $$('[data-copy]').forEach((button) => button.addEventListener('click', async () => {
     const record = getRecords().find((item) => item.id === button.dataset.copy);
     await navigator.clipboard.writeText(recordText(record));
-    toast('已複製紀錄');
+    toast(T.copied);
   }));
-
   $$('[data-delete]').forEach((button) => button.addEventListener('click', () => {
     setRecords(getRecords().filter((item) => item.id !== button.dataset.delete));
     renderRecords();
-    toast('已刪除');
+    toast(T.deleted);
   }));
 }
 
@@ -282,10 +408,10 @@ function bindRecordsPage() {
   if ($('#downloadDoc')) $('#downloadDoc').addEventListener('click', downloadDoc);
   if ($('#copyAll')) $('#copyAll').addEventListener('click', async () => {
     await navigator.clipboard.writeText(getRecords().map(recordText).join('\n------------------------------\n\n'));
-    toast('已複製全部紀錄');
+    toast(T.allCopied);
   });
   if ($('#clearAll')) $('#clearAll').addEventListener('click', () => {
-    if (confirm('確定清空所有紀錄嗎？')) {
+    if (confirm(T.clearConfirm)) {
       setRecords([]);
       renderRecords();
     }
@@ -296,24 +422,20 @@ function initMobileMenu() {
   const toggle = document.querySelector('.mobile-menu-toggle');
   const nav = document.querySelector('.nav-links');
   if (!toggle || !nav) return;
-
   const panel = document.createElement('nav');
   panel.className = 'mobile-nav-panel';
-  panel.setAttribute('aria-label', '手機導覽');
+  panel.setAttribute('aria-label', T.menu);
   panel.innerHTML = nav.innerHTML;
-
   const backdrop = document.createElement('div');
   backdrop.className = 'mobile-nav-backdrop';
   document.body.appendChild(backdrop);
   document.body.appendChild(panel);
-
   const setOpen = (open) => {
     toggle.setAttribute('aria-expanded', String(open));
     panel.classList.toggle('is-open', open);
     backdrop.classList.toggle('is-open', open);
     document.body.classList.toggle('menu-open', open);
   };
-
   toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
   backdrop.addEventListener('click', () => setOpen(false));
   panel.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setOpen(false)));

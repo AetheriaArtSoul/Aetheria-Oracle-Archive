@@ -157,33 +157,105 @@ body.menu-open{overflow:hidden}
 .article-reading{overflow:hidden}
 .article-intro{max-width:780px}
 .article-content{max-width:780px}
+.record-selected{
+  margin:14px 0;
+  padding:14px 0;
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+.record-selected strong{
+  display:block;
+  margin-bottom:8px;
+}
+.record-selected ul{
+  margin:0;
+  padding-left:1.2em;
+}
+.record-selected li{
+  margin:0 0 8px;
+  color:#444;
+}
+.carousel-shell{
+  position:relative;
+  margin:30px -10px 36px;
+  padding:0 54px 26px;
+}
 .image-carousel{
   display:flex;
-  gap:16px;
+  gap:18px;
   overflow-x:auto;
   scroll-snap-type:x mandatory;
-  margin:30px -38px 34px;
-  padding:0 38px 16px;
+  scroll-behavior:smooth;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
 }
+.image-carousel::-webkit-scrollbar{display:none}
 .image-carousel img{
-  flex:0 0 min(520px,78vw);
+  flex:0 0 100%;
+  width:100%;
   max-height:680px;
   object-fit:contain;
   background:white;
   border:1px solid var(--line);
-  scroll-snap-align:start;
+  scroll-snap-align:center;
 }
-.image-carousel::-webkit-scrollbar{height:6px}
-.image-carousel::-webkit-scrollbar-thumb{background:#c8c3b8}
+.carousel-arrow{
+  position:absolute;
+  top:50%;
+  width:42px;
+  height:42px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:rgba(251,251,250,.92);
+  color:var(--ink);
+  font-size:30px;
+  line-height:1;
+  display:grid;
+  place-items:center;
+  transform:translateY(-50%);
+  cursor:pointer;
+  box-shadow:0 12px 34px rgba(0,0,0,.08);
+  z-index:2;
+}
+.carousel-arrow:disabled{opacity:.28;cursor:default}
+.carousel-prev{left:0}
+.carousel-next{right:0}
+.carousel-dots{
+  position:absolute;
+  left:50%;
+  bottom:0;
+  display:flex;
+  gap:8px;
+  transform:translateX(-50%);
+}
+.carousel-dots span{
+  width:6px;
+  height:6px;
+  border-radius:999px;
+  background:#c8c3b8;
+  opacity:.58;
+}
+.carousel-dots span.active{
+  width:18px;
+  background:var(--ink);
+  opacity:1;
+}
 @media(max-width:860px){
   .article-reading{padding:24px}
   .article-intro,.article-content{max-width:none}
+  .carousel-shell{
+    margin:24px -10px 30px;
+    padding:0 36px 24px;
+  }
   .image-carousel{
-    margin:24px -24px 28px;
-    padding:0 24px 14px;
+    gap:12px;
   }
   .image-carousel img{
-    flex-basis:82vw;
     max-height:72vh;
+  }
+  .carousel-arrow{
+    width:34px;
+    height:34px;
+    font-size:24px;
   }
 }
