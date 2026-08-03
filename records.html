@@ -3,24 +3,54 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>我的占卜紀錄｜Aetheria Oracle Archive</title>
+  <title>我的紀錄｜Aetheria Art Soul</title>
   <link rel="stylesheet" href="assets/oracle.css">
-  <link rel="icon" href="favicon.ico">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png?v=4">
+  <link rel="shortcut icon" href="favicon.ico?v=4">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=4">
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="index.html" aria-label="Aetheria Art Soul"><img class="brand-logo" src="assets/aetheria-logo.jpg" alt="Aetheria Art Soul logo"><span>AETHERIA ART SOUL</span></a>
-    <nav class="nav-links" aria-label="primary"><a class="nav-link " href="index.html">占卜資料庫</a><a class="nav-link active" href="records.html">我的紀錄</a></nav><button class="mobile-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button></header>
+    <a class="brand" href="index.html" aria-label="Aetheria Art Soul">
+      <img class="brand-logo" src="assets/aetheria-logo.jpg" alt="Aetheria Art Soul logo">
+      <span>AETHERIA ART SOUL</span>
+    </a>
+    <nav class="nav-links" aria-label="主要導覽">
+      <a class="nav-link" href="index.html">占卜文章</a>
+      <a class="nav-link active" href="records.html">我的紀錄</a>
+    </nav>
+    <button class="mobile-menu-toggle" type="button" aria-label="開啟選單" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
   <main class="wrap records-page">
-  <div class="section-head"><div class="eyebrow">MY ORACLE NOTES</div><h1 class="page-title">我的占卜紀錄</h1><p class="lead">這些紀錄會暫存在你目前使用的瀏覽器裡。可以複製，也可以下載成 Word 檔案留存。</p><div class="records-toolbar"><button class="btn" id="downloadDoc">下載 Word</button><button class="btn secondary" id="copyAll">複製全部</button><button class="btn secondary" id="clearAll">清空紀錄</button></div></div>
-  <section class="record-list" id="recordList"></section>
-</main><div id="toast" class="toast"></div>
+    <div class="section-head">
+      <div class="eyebrow">AETHERIA ART SOUL</div>
+      <h1 class="page-title">我的占卜紀錄</h1>
+      <p class="lead">這裡會保存你在此網站留下的占卜選項與感受。可以複製，也可以下載成 Word 檔案留存。</p>
+      <div class="records-toolbar">
+        <button class="btn" id="downloadDoc">下載 Word</button>
+        <button class="btn secondary" id="copyAll">複製全部</button>
+        <button class="btn secondary" id="clearAll">清空紀錄</button>
+      </div>
+    </div>
+    <section class="record-list" id="recordList"></section>
+  </main>
+  <div id="toast" class="toast"></div>
+
   <footer class="footer">
-    <div class="footer-brand"><img class="brand-logo" src="assets/aetheria-logo.jpg" alt="Aetheria Art Soul logo"><span>AETHERIA ART SOUL</span></div>
+    <div class="footer-brand">
+      <img class="brand-logo" src="assets/aetheria-logo.jpg" alt="Aetheria Art Soul logo">
+      <span>AETHERIA ART SOUL</span>
+    </div>
     <p>曼陀羅創作與占卜訊息，陪你把每一次看見留回生活裡。</p>
-    <nav class="footer-links"><a href="index.html">占卜資料庫</a><a href="records.html">我的紀錄</a></nav>
+    <nav class="footer-links">
+      <a href="index.html">占卜文章</a>
+      <a href="records.html">我的紀錄</a>
+    </nav>
   </footer>
+
   <script src="assets/oracle.js"></script>
 </body>
 </html>
