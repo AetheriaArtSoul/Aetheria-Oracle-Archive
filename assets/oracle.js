@@ -1,13 +1,44 @@
 
 const DATA_URL='assets/data/articles.json';
+const SHEET_CSV_URL='';
 const STORE_KEY='aetheria-oracle-records-v1';
 const $=(s,root=document)=>root.querySelector(s);
 const $$=(s,root=document)=>Array.from(root.querySelectorAll(s));
 const getRecords=()=>JSON.parse(localStorage.getItem(STORE_KEY)||'[]');
 const setRecords=(items)=>localStorage.setItem(STORE_KEY,JSON.stringify(items));
 function toast(text){const el=$('#toast')||document.createElement('div');el.id='toast';el.className='toast';el.textContent=text;if(!el.parentNode)document.body.appendChild(el);requestAnimationFrame(()=>el.classList.add('show'));setTimeout(()=>el.classList.remove('show'),1800)}
-async function loadArticles(){const res=await fetch(DATA_URL);return await res.json()}
-function card(article){return `<a class="article-card" href="article.html?id=${encodeURIComponent(article.id)}"><img src="${article.images[0]||''}" alt="${article.title}"><div class="article-body"><div class="meta">${article.code}</div><h3>${article.title}</h3><p class="muted">${article.excerpt||''}</p><span>\u9032\u5165\u5360\u535c \u2192</span></div></a>`}
+function parseCsv(text){
+  const rows=[];let row=[];let cell='';let quoted=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i],next=text[i+1];
+    if(ch==='"'&&quoted&&next==='"'){cell+='"';i++;continue}
+    if(ch==='"'){quoted=!quoted;continue}
+    if(ch===','&&!quoted){row.push(cell);cell='';continue}
+    if((ch==='\n'||ch==='\r')&&!quoted){if(ch==='\r'&&next==='\n')i++;row.push(cell);if(row.some(v=>v.trim()))rows.push(row);row=[];cell='';continue}
+    cell+=ch;
+  }
+  row.push(cell);if(row.some(v=>v.trim()))rows.push(row);
+  return rows;
+}
+function articlesFromCsv(text){
+  const rows=parseCsv(text);if(rows.length<2)return[];
+  const heads=rows[0].map(h=>h.trim());
+  return rows.slice(1).map(r=>Object.fromEntries(heads.map((h,i)=>[h,r[i]||'']))).filter(r=>r.id).map(r=>({
+    id:r.id,code:r.code,title:r.title,excerpt:r.excerpt,published:r.published,
+    images:(r.images||'').split('|').map(s=>s.trim()).filter(Boolean),
+    paragraphs:(r.paragraphs||'').split('|').map(s=>s.trim()).filter(Boolean)
+  }));
+}
+async function loadArticles(){
+  if(SHEET_CSV_URL){
+    const csv=await fetch(SHEET_CSV_URL,{cache:'no-store'}).then(r=>r.text());
+    const rows=articlesFromCsv(csv);
+    if(rows.length)return rows;
+  }
+  const res=await fetch(DATA_URL,{cache:'no-store'});
+  return await res.json();
+}
+function card(article){return `<a class="article-card" href="article.html?id=${encodeURIComponent(article.id)}"><img src="${article.images[0]||''}" alt="${article.title}" loading="lazy"><div class="article-body"><div class="meta">${article.code}</div><h3>${article.title}</h3><p class="muted">${article.excerpt||'\u9032\u5165\u6587\u7ae0\u5f8c\u8a18\u9304\u4f60\u7684\u9078\u9805\u8207\u611f\u53d7\u3002'}</p><span>\u9032\u5165\u5360\u535c \u2192</span></div></a>`}
 async function renderIndex(){const root=$('#articleGrid');if(!root)return;const articles=await loadArticles();root.innerHTML=articles.map(card).join('')}
 async function renderArticle(){
   const root=$('#articlePage');
@@ -17,7 +48,10 @@ async function renderArticle(){
   const articles=await loadArticles();
   const a=articles.find(x=>x.id===id)||articles[0];
   document.title=a.title+'\uff5cAetheria Oracle Archive';
-  root.innerHTML=`<div class="article-layout"><main><div class="reading"><div class="meta">${a.code}</div><h1>${a.title}</h1>${(a.paragraphs||[]).slice(0,28).map(p=>`<p>${p}</p>`).join('')}</div><div class="gallery">${(a.images||[]).map(src=>`<img src="${src}" alt="${a.title}">`).join('')}</div></main><aside class="choice-box"><h2>\u8a18\u9304\u9019\u6b21\u8a0a\u606f</h2><p class="muted">\u5beb\u4e0b\u4f60\u9019\u6b21\u9078\u5230\u7684\u7d44\u5408\uff0c\u4e5f\u53ef\u4ee5\u7559\u4e00\u9ede\u7576\u4e0b\u611f\u53d7\u3002\u4e0b\u6b21\u56de\u4f86\uff0c\u7d00\u9304\u6703\u7559\u5728\u4f60\u7684\u700f\u89bd\u5668\u88e1\u3002</p><div class="field"><label>\u6211\u9019\u6b21\u9078\u5230</label><input id="choiceInput" type="text" placeholder="\u4f8b\u5982\uff1aA\u30011+3\u3001\u5de6\u4e0a\u8207\u53f3\u4e0b\u3001\u7d05\u8272\u90a3\u5f35"></div><div class="field"><label>\u7576\u4e0b\u611f\u53d7</label><textarea id="noteInput" placeholder="\u9019\u6b21\u6211\u770b\u898b\u2026\u2026"></textarea></div><button class="btn" id="saveRecord">\u5132\u5b58\u5230\u6211\u7684\u7d00\u9304</button><a class="btn secondary" href="records.html">\u67e5\u770b\u6211\u7684\u7d00\u9304</a></aside></div>`;
+  const paragraphs=(a.paragraphs||[]).slice(0,80);
+  const intro=paragraphs.slice(0,2);
+  const body=paragraphs.slice(2);
+  root.innerHTML=`<div class="article-layout"><main><article class="reading article-reading"><div class="meta">${a.code}</div><h1>${a.title}</h1><div class="article-intro">${intro.map(p=>`<p>${p}</p>`).join('')}</div><div class="image-carousel" aria-label="\u5360\u535c\u5716\u7247">${(a.images||[]).map(src=>`<img src="${src}" alt="${a.title}" loading="lazy">`).join('')}</div><div class="article-content">${body.map(p=>`<p>${p}</p>`).join('')}</div></article></main><aside class="choice-box"><h2>\u8a18\u9304\u9019\u6b21\u8a0a\u606f</h2><p class="muted">\u6bcf\u7bc7\u5360\u535c\u898f\u5247\u4e0d\u540c\uff0c\u53ef\u4ee5\u586b A\u30011+3 \u6216 A1B2F3\u3002\u5982\u679c\u540c\u4e00\u5f35\u5716\u91cd\u8907\u88ab\u4f60\u9078\u5230\uff0c\u4e5f\u53ef\u4ee5\u7167\u5be6\u8a18\u4e0b\u3002</p><div class="field"><label>\u6211\u9019\u6b21\u9078\u5230</label><input id="choiceInput" type="text" placeholder="\u4f8b\u5982\uff1aA1B2F3\uff0c\u4e5f\u53ef\u4ee5\u91cd\u8907\u9078\u540c\u4e00\u5f35\u5716"></div><div class="field"><label>\u7576\u4e0b\u611f\u53d7</label><textarea id="noteInput" placeholder="\u9019\u6b21\u6211\u770b\u898b\u2026\u2026"></textarea></div><button class="btn" id="saveRecord">\u5132\u5b58\u5230\u6211\u7684\u7d00\u9304</button><a class="btn secondary" href="records.html">\u67e5\u770b\u6211\u7684\u7d00\u9304</a></aside></div>`;
   $('#saveRecord').addEventListener('click',()=>{
     const records=getRecords();
     const choice=($('#choiceInput').value||'').trim()||'\u672a\u586b\u5beb';
