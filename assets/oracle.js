@@ -1,4 +1,4 @@
-﻿const ASSET_VERSION = '20260803c';
+﻿const ASSET_VERSION = '20260803d';
 const DATA_URL = `assets/data/articles.json?v=${ASSET_VERSION}`;
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGKQTLj_6e8cvjt01huQ4vX81v3iSnrVaY94aVGae2f7XrS9NIosb5WZYPDYIL9QE1DVax9jp6vrfR/pub?output=csv';
 const STORE_KEY = 'aetheria-oracle-records-v1';
@@ -57,6 +57,20 @@ function assetUrl(src) {
   if (!value) return '';
   if (/^(https?:|data:|mailto:)/i.test(value)) return value;
   return value.includes('?') ? `${value}&v=${ASSET_VERSION}` : `${value}?v=${ASSET_VERSION}`;
+}
+
+function imageSources(src, fallbackSources = []) {
+  const list = [src, ...fallbackSources]
+    .map(directImageUrl)
+    .map(assetUrl)
+    .filter(Boolean);
+  return [...new Set(list)];
+}
+
+function imgHtml(src, alt, attrs = '', fallbackSources = []) {
+  const sources = imageSources(src, fallbackSources);
+  const fallbackAttr = sources.length > 1 ? ` data-fallbacks="${escapeHtml(sources.slice(1).join('|'))}"` : '';
+  return `<img src="${escapeHtml(sources[0] || '')}" alt="${escapeHtml(alt)}"${fallbackAttr} ${attrs}>`;
 }
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -136,7 +150,7 @@ function directImageUrl(url) {
   if (!source) return '';
   const match = source.match(/\/d\/([^/]+)/) || source.match(/[?&]id=([^&]+)/);
   if (match && source.includes('drive.google.com')) {
-    return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1200`;
+    return `https://lh3.googleusercontent.com/d/${match[1]}=w1200`;
   }
   return source;
 }
@@ -199,8 +213,10 @@ async function loadArticles() {
           return {
             ...bundled,
             ...article,
-            coverImage: bundled.coverImage || bundled.images?.[0] || article.coverImage,
-            images: bundled.images && bundled.images.length ? bundled.images : article.images,
+            coverImage: article.coverImage || bundled.coverImage || bundled.images?.[0],
+            images: article.images && article.images.length ? article.images : bundled.images,
+            fallbackCoverImage: bundled.coverImage || bundled.images?.[0] || '',
+            fallbackImages: bundled.images || [],
           };
         });
       }
@@ -215,9 +231,10 @@ async function loadArticles() {
 function card(article) {
   const excerpt = truncateText(article.excerpt || T.fallbackExcerpt, 150);
   const image = article.coverImage || article.images[0] || '';
+  const fallbackImages = [article.fallbackCoverImage, ...(article.fallbackImages || [])].filter(Boolean);
   return `
     <a class="article-card" href="article.html?id=${encodeURIComponent(article.id)}">
-      <img src="${escapeHtml(assetUrl(image))}" alt="${escapeHtml(article.title)}" loading="lazy" decoding="async">
+      ${imgHtml(image, article.title, 'loading="lazy" decoding="async"', fallbackImages)}
       <div class="article-body">
         <div class="meta">${escapeHtml(article.code)}</div>
         <h3>${escapeHtml(article.title)}</h3>
@@ -268,6 +285,7 @@ async function renderIndex() {
   if (!root) return;
   const articles = await loadArticles();
   root.innerHTML = articles.map(card).join('');
+  initImageFallbacks(root);
 }
 
 function normalizeToken(token) {
@@ -383,7 +401,7 @@ async function renderArticle() {
     ? `<div class="carousel-shell" data-carousel>
         <button class="carousel-arrow carousel-prev" type="button" aria-label="${T.prev}">\u2039</button>
         <div class="image-carousel" aria-label="${T.cardAlt}">
-          ${article.images.map((src, index) => `<img src="${escapeHtml(assetUrl(src))}" alt="${escapeHtml(article.title)} ${index + 1}" loading="lazy" decoding="async">`).join('')}
+          ${article.images.map((src, index) => imgHtml(src, `${article.title} ${index + 1}`, 'loading="lazy" decoding="async"', [article.fallbackImages?.[index], article.fallbackCoverImage].filter(Boolean))).join('')}
         </div>
         <button class="carousel-arrow carousel-next" type="button" aria-label="${T.next}">\u203a</button>
         <div class="carousel-dots" aria-hidden="true">
@@ -440,6 +458,19 @@ async function renderArticle() {
     toast(T.recordSaved);
   });
   initCarousels(root);
+  initImageFallbacks(root);
+}
+
+function initImageFallbacks(root = document) {
+  $$('img[data-fallbacks]', root).forEach((img) => {
+    img.addEventListener('error', () => {
+      const fallbacks = (img.dataset.fallbacks || '').split('|').filter(Boolean);
+      const next = fallbacks.shift();
+      if (!next) return;
+      img.dataset.fallbacks = fallbacks.join('|');
+      img.src = next;
+    });
+  });
 }
 
 function initCarousels(root = document) {
@@ -620,3 +651,4 @@ document.addEventListener('DOMContentLoaded', () => {
   bindRecordsPage();
   protectImages();
 });
+
