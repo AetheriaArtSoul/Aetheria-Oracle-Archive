@@ -183,7 +183,7 @@ async function loadArticles() {
 }
 
 function card(article) {
-  const excerpt = article.excerpt || T.fallbackExcerpt;
+  const excerpt = truncateText(article.excerpt || T.fallbackExcerpt, 150);
   const image = article.coverImage || article.images[0] || '';
   return `
     <a class="article-card" href="article.html?id=${encodeURIComponent(article.id)}">
@@ -196,6 +196,12 @@ function card(article) {
       </div>
     </a>
   `;
+}
+
+function truncateText(text, limit = 150) {
+  const value = String(text || '').trim();
+  if (value.length <= limit) return value;
+  return `${value.slice(0, limit).trim()}......`;
 }
 
 async function renderIndex() {
@@ -217,7 +223,7 @@ function parseChoiceTokens(choice) {
 
 function paragraphToken(paragraph) {
   const text = String(paragraph || '').trim();
-  const match = text.match(/^[\s\u25ae\u25aa\u25cf\u2022\-]*([A-Z]|\d+)\s*(?:[|｜、.．:：\s]|$)/i);
+  const match = text.match(/^[\s\u25ae\u25aa\u25cf\u2022\-]*([A-Z]|\d+)\s*(?:[^\w]|\s|$)/i);
   return match ? normalizeToken(match[1]) : '';
 }
 
