@@ -17,6 +17,9 @@ const T = {
   deleteLabel: '\u522a\u9664',
   downloadName: 'Aetheria\u5360\u535c\u7d00\u9304.doc',
   emptyRecords: '\u76ee\u524d\u9084\u6c92\u6709\u5132\u5b58\u7684\u5360\u535c\u7d00\u9304\u3002',
+  emailInvalid: '\u8acb\u5148\u8f38\u5165\u6b63\u78ba\u7684 Email',
+  emailNoRecords: '\u76ee\u524d\u9084\u6c92\u6709\u53ef\u4ee5\u5bc4\u51fa\u7684\u7d00\u9304',
+  emailSubject: 'Aetheria Art Soul\uff5c\u6211\u7684\u5360\u535c\u7d00\u9304',
   fallbackExcerpt: '\u9032\u5165\u6587\u7ae0\uff0c\u6162\u6162\u770b\u898b\u9019\u6b21\u88ab\u4f60\u9078\u4e2d\u7684\u8a0a\u606f\u3002',
   hint: '\u6bcf\u7bc7\u5360\u535c\u898f\u5247\u4e0d\u540c\uff0c\u53ef\u4ee5\u586b A\u30011+3 \u6216 A1B2F3\u3002\u5982\u679c\u540c\u4e00\u5f35\u5716\u91cd\u8907\u88ab\u4f60\u9078\u5230\uff0c\u4e5f\u53ef\u4ee5\u7167\u5be6\u8a18\u4e0b\u3002',
   menu: '\u624b\u6a5f\u5c0e\u89bd',
@@ -204,6 +207,35 @@ function truncateText(text, limit = 150) {
   return `${value.slice(0, limit).trim()}......`;
 }
 
+function renderReadingParagraph(paragraph) {
+  const text = String(paragraph || '').trim();
+  const optionMatch = text.match(/^[\s\u25a0\u25ae\u258d\u2022\-]*([A-H])\s*[|｜:：、.．]\s*(.+)$/i);
+  if (optionMatch) {
+    return `
+      <section class="oracle-option-block">
+        <span class="oracle-option-badge">${escapeHtml(optionMatch[1].toUpperCase())}</span>
+        <p>${escapeHtml(optionMatch[2])}</p>
+      </section>
+    `;
+  }
+
+  const numberedMatch = text.match(/^[\s\u25a0\u25ae\u258d\u2022\-]*([1-9])\s*[|｜:：、.．]?\s*(.+)$/);
+  if (numberedMatch) {
+    return `
+      <section class="oracle-number-block">
+        <span class="oracle-number">${escapeHtml(numberedMatch[1])}</span>
+        <p>${escapeHtml(numberedMatch[2])}</p>
+      </section>
+    `;
+  }
+
+  return `<p>${escapeHtml(text)}</p>`;
+}
+
+function renderReadingText(paragraphs) {
+  return (paragraphs || []).map(renderReadingParagraph).join('');
+}
+
 async function renderIndex() {
   const root = $('#articleGrid');
   if (!root) return;
@@ -339,9 +371,9 @@ async function renderArticle() {
         <article class="reading article-reading">
           <div class="meta">${escapeHtml(article.code)}</div>
           <h1>${escapeHtml(article.title)}</h1>
-          <div class="article-intro">${intro.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}</div>
+          <div class="article-intro">${renderReadingText(intro)}</div>
           ${carousel}
-          <div class="article-content">${body.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}</div>
+          <div class="article-content">${renderReadingText(body)}</div>
         </article>
       </main>
       <aside class="choice-box">
@@ -438,6 +470,23 @@ function downloadDoc() {
   URL.revokeObjectURL(link.href);
 }
 
+function emailRecords(event) {
+  event.preventDefault();
+  const email = ($('#recordEmail')?.value || '').trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    toast(T.emailInvalid);
+    return;
+  }
+  const records = getRecords();
+  if (!records.length) {
+    toast(T.emailNoRecords);
+    return;
+  }
+  const body = records.map(recordText).join('\n------------------------------\n\n');
+  const href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(T.emailSubject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = href;
+}
+
 function renderRecords() {
   const root = $('#recordList');
   if (!root) return;
@@ -478,6 +527,7 @@ function renderRecords() {
 
 function bindRecordsPage() {
   if ($('#downloadDoc')) $('#downloadDoc').addEventListener('click', downloadDoc);
+  if ($('#recordEmailForm')) $('#recordEmailForm').addEventListener('submit', emailRecords);
   if ($('#copyAll')) $('#copyAll').addEventListener('click', async () => {
     await navigator.clipboard.writeText(getRecords().map(recordText).join('\n------------------------------\n\n'));
     toast(T.allCopied);

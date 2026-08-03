@@ -157,6 +157,54 @@ body.menu-open{overflow:hidden}
 .article-reading{overflow:hidden}
 .article-intro{max-width:780px}
 .article-content{max-width:780px}
+.oracle-option-block,
+.oracle-number-block{
+  position:relative;
+  margin:18px 0 22px;
+  padding:0 0 0 44px;
+}
+.oracle-option-block::before,
+.oracle-number-block::before{
+  content:"";
+  position:absolute;
+  left:20px;
+  top:.35em;
+  bottom:.35em;
+  width:1px;
+  background:var(--gold);
+  opacity:.55;
+}
+.oracle-option-badge,
+.oracle-number{
+  position:absolute;
+  left:0;
+  top:.05em;
+  display:inline-grid;
+  place-items:center;
+  min-width:28px;
+  height:28px;
+  color:var(--gold);
+  font-family:Georgia,serif;
+  font-weight:800;
+  letter-spacing:.08em;
+}
+.oracle-option-badge{
+  color:var(--ink);
+  border:1px solid rgba(21,21,21,.22);
+  background:rgba(255,255,255,.45);
+}
+.oracle-number{
+  font-size:22px;
+}
+.oracle-option-block p,
+.oracle-number-block p{
+  margin:0;
+  color:#3f3f3f;
+}
+.oracle-option-block p{
+  font-weight:700;
+  color:#252525;
+}
 .record-selected{
   margin:14px 0;
   padding:14px 0;
@@ -174,6 +222,39 @@ body.menu-open{overflow:hidden}
 .record-selected li{
   margin:0 0 8px;
   color:#444;
+}
+.record-save-note,
+.record-email-form{
+  max-width:860px;
+  margin:24px 0;
+  padding:22px 24px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.48);
+}
+.record-save-note strong,
+.record-email-form label{
+  display:block;
+  font-weight:800;
+  margin-bottom:8px;
+}
+.record-save-note p,
+.record-email-form p{
+  margin:0;
+  color:#666;
+}
+.record-email-form>div{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  margin:12px 0 10px;
+}
+.record-email-form input{
+  flex:1;
+  min-width:220px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.82);
+  padding:12px 14px;
+  font:inherit;
 }
 .carousel-shell{
   position:relative;
@@ -257,5 +338,15 @@ body.menu-open{overflow:hidden}
     width:34px;
     height:34px;
     font-size:24px;
+  }
+  .record-save-note,
+  .record-email-form{
+    padding:18px;
+  }
+  .record-email-form>div{
+    display:grid;
+  }
+  .record-email-form input{
+    min-width:0;
   }
 }
