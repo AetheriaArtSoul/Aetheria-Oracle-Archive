@@ -423,3 +423,24 @@ body.menu-open{overflow:hidden}
     width:100%;
   }
 }
+
+/* Choice box button alignment */
+.choice-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:18px;
+}
+.choice-actions .btn{
+  width:100%;
+  min-width:0;
+  padding-left:12px;
+  padding-right:12px;
+  text-align:center;
+  white-space:nowrap;
+}
+@media(max-width:520px){
+  .choice-actions{
+    grid-template-columns:1fr;
+  }
+}

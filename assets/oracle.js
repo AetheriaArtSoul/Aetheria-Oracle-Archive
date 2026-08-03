@@ -387,8 +387,10 @@ async function renderArticle() {
           <label>${T.noteLabel}</label>
           <textarea id="noteInput" placeholder="${T.notePlaceholder}"></textarea>
         </div>
-        <button class="btn" id="saveRecord">${T.save}</button>
-        <a class="btn secondary" href="records.html">${T.viewRecords}</a>
+        <div class="choice-actions">
+          <button class="btn" id="saveRecord">${T.save}</button>
+          <a class="btn secondary" href="records.html">${T.viewRecords}</a>
+        </div>
       </aside>
     </div>
   `;
