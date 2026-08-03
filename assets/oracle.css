@@ -361,3 +361,65 @@ body.menu-open{overflow:hidden}
     min-width:0;
   }
 }
+
+/* Page alignment lock */
+.hero,
+.records-page>section:first-child,
+.section-head{
+  text-align:center;
+}
+.hero>div,
+.records-page>section:first-child,
+.section-head{
+  width:min(100%,900px);
+  margin-left:auto;
+  margin-right:auto;
+}
+.eyebrow,
+.page-title,
+.lead{
+  text-align:center;
+}
+.page-title{
+  width:100%;
+  margin-left:auto;
+  margin-right:auto;
+}
+.records-toolbar{
+  justify-content:center;
+  align-items:center;
+  width:min(100%,760px);
+  margin-left:auto;
+  margin-right:auto;
+}
+.records-toolbar .btn{
+  min-width:118px;
+}
+.record-save-note,
+.record-email-form,
+.record-list{
+  width:min(100%,860px);
+  margin-left:auto;
+  margin-right:auto;
+}
+.records-page .lead{
+  width:min(100%,760px);
+  margin-left:auto;
+  margin-right:auto;
+}
+@media(max-width:860px){
+  .hero,
+  .records-page>section:first-child,
+  .section-head{
+    text-align:center;
+  }
+  .records-toolbar{
+    display:grid;
+    grid-template-columns:1fr;
+    width:100%;
+    gap:10px;
+  }
+  .records-toolbar .btn{
+    width:100%;
+  }
+}
