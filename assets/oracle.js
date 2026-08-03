@@ -1,4 +1,4 @@
-const ASSET_VERSION = '20260803b';
+﻿const ASSET_VERSION = '20260803c';
 const DATA_URL = `assets/data/articles.json?v=${ASSET_VERSION}`;
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGKQTLj_6e8cvjt01huQ4vX81v3iSnrVaY94aVGae2f7XrS9NIosb5WZYPDYIL9QE1DVax9jp6vrfR/pub?output=csv';
 const STORE_KEY = 'aetheria-oracle-records-v1';
@@ -184,13 +184,32 @@ function articlesFromCsv(text) {
 }
 
 async function loadArticles() {
+  const bundledResponse = await fetch(DATA_URL, { cache: 'no-store' });
+  const bundledRows = await bundledResponse.json();
+  const bundledById = new Map(bundledRows.map((article) => [String(article.id), article]));
+
   if (SHEET_CSV_URL) {
-    const csv = await fetch(SHEET_CSV_URL, { cache: 'no-store' }).then((response) => response.text());
-    const rows = articlesFromCsv(csv);
-    if (rows.length) return rows;
+    try {
+      const csv = await fetch(SHEET_CSV_URL, { cache: 'no-store' }).then((response) => response.text());
+      const rows = articlesFromCsv(csv);
+      if (rows.length) {
+        return rows.map((article) => {
+          const bundled = bundledById.get(String(article.id));
+          if (!bundled) return article;
+          return {
+            ...bundled,
+            ...article,
+            coverImage: bundled.coverImage || bundled.images?.[0] || article.coverImage,
+            images: bundled.images && bundled.images.length ? bundled.images : article.images,
+          };
+        });
+      }
+    } catch (error) {
+      console.warn('CSV loading skipped', error);
+    }
   }
-  const response = await fetch(DATA_URL, { cache: 'no-store' });
-  return response.json();
+
+  return bundledRows;
 }
 
 function card(article) {
@@ -198,7 +217,7 @@ function card(article) {
   const image = article.coverImage || article.images[0] || '';
   return `
     <a class="article-card" href="article.html?id=${encodeURIComponent(article.id)}">
-      <img src="${escapeHtml(assetUrl(image))}" alt="${escapeHtml(article.title)}" loading="lazy">
+      <img src="${escapeHtml(assetUrl(image))}" alt="${escapeHtml(article.title)}" loading="lazy" decoding="async">
       <div class="article-body">
         <div class="meta">${escapeHtml(article.code)}</div>
         <h3>${escapeHtml(article.title)}</h3>
@@ -364,7 +383,7 @@ async function renderArticle() {
     ? `<div class="carousel-shell" data-carousel>
         <button class="carousel-arrow carousel-prev" type="button" aria-label="${T.prev}">\u2039</button>
         <div class="image-carousel" aria-label="${T.cardAlt}">
-          ${article.images.map((src, index) => `<img src="${escapeHtml(assetUrl(src))}" alt="${escapeHtml(article.title)} ${index + 1}" loading="lazy">`).join('')}
+          ${article.images.map((src, index) => `<img src="${escapeHtml(assetUrl(src))}" alt="${escapeHtml(article.title)} ${index + 1}" loading="lazy" decoding="async">`).join('')}
         </div>
         <button class="carousel-arrow carousel-next" type="button" aria-label="${T.next}">\u203a</button>
         <div class="carousel-dots" aria-hidden="true">
