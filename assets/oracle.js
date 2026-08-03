@@ -89,7 +89,7 @@ function articlesFromCsv(text) {
     .filter(Boolean);
   const splitText = (value) => String(value || '')
     .replace(/\r/g, '')
-    .split(/\n\s*\.\s*\n|\n{2,}|\|/g)
+    .split(/\n+|\|/g)
     .map(sanitizeText)
     .filter(Boolean);
 
@@ -113,7 +113,8 @@ function articlesFromCsv(text) {
         title: sanitizeText(pick(row, '標題', 'title')),
         excerpt: sanitizeText(pick(row, '首頁簡介', 'excerpt')),
         published: pick(row, '發布日期', 'published'),
-        images: [cover, ...gallery].filter(Boolean),
+        coverImage: cover || gallery[0] || '',
+        images: gallery.filter(Boolean),
         introParagraphs,
         contentParagraphs,
         paragraphs: [...introParagraphs, ...contentParagraphs],
@@ -135,9 +136,10 @@ async function loadArticles() {
 
 function card(article) {
   const excerpt = article.excerpt || '進入文章，慢慢看見這次被你選中的訊息。';
+  const image = article.coverImage || article.images[0] || '';
   return `
     <a class="article-card" href="article.html?id=${encodeURIComponent(article.id)}">
-      <img src="${article.images[0] || ''}" alt="${article.title}" loading="lazy">
+      <img src="${image}" alt="${article.title}" loading="lazy">
       <div class="article-body">
         <div class="meta">${article.code}</div>
         <h3>${article.title}</h3>
@@ -174,6 +176,12 @@ async function renderArticle() {
     : (article.paragraphs || []).slice(intro.length);
   const hint = article.recordHint || '每篇占卜規則不同，可以填 A、1+3 或 A1B2F3。如果同一張圖重複被你選到，也可以照實記下。';
 
+  const carousel = (article.images || []).length
+    ? `<div class="image-carousel" aria-label="占卜圖片">
+        ${article.images.map((src) => `<img src="${src}" alt="${article.title}" loading="lazy">`).join('')}
+      </div>`
+    : '';
+
   root.innerHTML = `
     <div class="article-layout">
       <main>
@@ -181,9 +189,7 @@ async function renderArticle() {
           <div class="meta">${article.code}</div>
           <h1>${article.title}</h1>
           <div class="article-intro">${intro.map((paragraph) => `<p>${paragraph}</p>`).join('')}</div>
-          <div class="image-carousel" aria-label="占卜圖片">
-            ${(article.images || []).map((src) => `<img src="${src}" alt="${article.title}" loading="lazy">`).join('')}
-          </div>
+          ${carousel}
           <div class="article-content">${body.map((paragraph) => `<p>${paragraph}</p>`).join('')}</div>
         </article>
       </main>
