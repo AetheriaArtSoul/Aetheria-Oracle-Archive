@@ -444,3 +444,46 @@ body.menu-open{overflow:hidden}
     grid-template-columns:1fr;
   }
 }
+
+/* Transparent brand mark */
+.site-header .brand,
+.footer .brand,
+.footer-brand{
+  background:transparent!important;
+}
+.site-header .brand-logo,
+.footer .brand-logo,
+.footer-brand .brand-logo{
+  display:block!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  outline:0!important;
+}
+.site-header .brand-logo{
+  mix-blend-mode:normal!important;
+  filter:contrast(1.08)!important;
+}
+.footer .brand-logo,
+.footer-brand .brand-logo{
+  filter:invert(1) contrast(1.08)!important;
+  mix-blend-mode:normal!important;
+}
+
+/* Image protection and footer copyright */
+img{
+  -webkit-user-drag:none!important;
+  user-drag:none!important;
+  -webkit-user-select:none!important;
+  user-select:none!important;
+}
+.copyright{
+  margin:22px auto 0!important;
+  padding-top:18px;
+  border-top:1px solid rgba(255,255,255,.16);
+  max-width:760px;
+  color:rgba(255,255,255,.58)!important;
+  font-size:13px;
+  letter-spacing:.08em;
+  line-height:1.8;
+}

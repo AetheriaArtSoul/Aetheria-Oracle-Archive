@@ -565,10 +565,31 @@ function initMobileMenu() {
   panel.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setOpen(false)));
 }
 
+function protectImages() {
+  const lockImage = (image) => {
+    image.setAttribute('draggable', 'false');
+    image.addEventListener('dragstart', (event) => event.preventDefault());
+    image.addEventListener('contextmenu', (event) => event.preventDefault());
+  };
+  $$('img').forEach(lockImage);
+  document.addEventListener('contextmenu', (event) => {
+    if (event.target && event.target.closest && event.target.closest('img')) {
+      event.preventDefault();
+    }
+  });
+  document.addEventListener('dragstart', (event) => {
+    if (event.target && event.target.closest && event.target.closest('img')) {
+      event.preventDefault();
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initMobileMenu();
+  protectImages();
   renderIndex();
   renderArticle();
   renderRecords();
   bindRecordsPage();
+  protectImages();
 });
