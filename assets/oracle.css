@@ -160,41 +160,51 @@ body.menu-open{overflow:hidden}
 .oracle-option-block,
 .oracle-number-block{
   position:relative;
-  margin:18px 0 22px;
-  padding:0 0 0 44px;
+  margin:20px 0;
+  padding:0 0 0 38px;
 }
-.oracle-option-block::before,
 .oracle-number-block::before{
   content:"";
   position:absolute;
-  left:20px;
-  top:.35em;
-  bottom:.35em;
+  left:13px;
+  top:.4em;
+  bottom:.45em;
   width:1px;
   background:var(--gold);
-  opacity:.55;
+  opacity:.36;
 }
 .oracle-option-badge,
 .oracle-number{
   position:absolute;
   left:0;
-  top:.05em;
+  top:.08em;
   display:inline-grid;
   place-items:center;
-  min-width:28px;
-  height:28px;
+  min-width:26px;
+  height:26px;
   color:var(--gold);
   font-family:Georgia,serif;
   font-weight:800;
-  letter-spacing:.08em;
+  letter-spacing:.06em;
 }
 .oracle-option-badge{
-  color:var(--ink);
-  border:1px solid rgba(21,21,21,.22);
-  background:rgba(255,255,255,.45);
+  color:var(--gold);
+  font-size:14px;
+  border:0;
+  background:transparent;
+}
+.oracle-option-badge::after{
+  content:"";
+  width:18px;
+  height:1px;
+  margin-top:2px;
+  background:var(--gold);
+  opacity:.42;
 }
 .oracle-number{
-  font-size:22px;
+  font-size:18px;
+  color:var(--gold);
+  opacity:.92;
 }
 .oracle-option-block p,
 .oracle-number-block p{
@@ -204,6 +214,7 @@ body.menu-open{overflow:hidden}
 .oracle-option-block p{
   font-weight:700;
   color:#252525;
+  letter-spacing:.02em;
 }
 .record-selected{
   margin:14px 0;
