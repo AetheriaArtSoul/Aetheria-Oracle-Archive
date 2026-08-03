@@ -221,25 +221,91 @@ function parseChoiceTokens(choice) {
     .match(/[A-Z]|\d+/g) || [];
 }
 
-function paragraphToken(paragraph) {
+function paragraphToken(paragraph, kind = 'any') {
   const text = String(paragraph || '').trim();
-  const match = text.match(/^[\s\u25ae\u25aa\u25cf\u2022\-]*([A-Z]|\d+)\s*(?:[^\w]|\s|$)/i);
+  const marker = '[\\s\\u258d\\u25ae\\u25aa\\u25cf\\u2022\\-]*';
+  const letter = new RegExp(`^${marker}([A-Z])\\s*(?:[^\\w]|\\s|$)`, 'i');
+  const number = new RegExp(`^${marker}(\\d+)\\s*(?:\\ufe0f?\\u20e3|[^\\w]|\\s|$)`, 'i');
+  const match = kind === 'letter'
+    ? text.match(letter)
+    : kind === 'number'
+      ? text.match(number)
+      : text.match(letter) || text.match(number);
   return match ? normalizeToken(match[1]) : '';
 }
 
 function selectedMessagesFromChoice(choice, paragraphs) {
   const tokens = parseChoiceTokens(choice);
+  const optionMap = buildOptionMessageMap(paragraphs);
+  const pairs = choicePairs(tokens);
+  const matchedPairs = [];
+
+  pairs.forEach(({ letter, number }) => {
+    const message = optionMap.get(`${letter}${number}`);
+    if (message) matchedPairs.push(message);
+  });
+
+  if (matchedPairs.length) return matchedPairs;
+
   const used = new Set();
-  const matches = [];
-  tokens.forEach((token) => {
+  return tokens.reduce((matches, token) => {
     const normalized = normalizeToken(token);
-    const index = paragraphs.findIndex((paragraph, paragraphIndex) => paragraphToken(paragraph) === normalized && !used.has(paragraphIndex));
-    if (index >= 0) {
-      used.add(index);
-      matches.push(paragraphs[index]);
+    const found = Array.from(optionMap.entries()).find(([key]) => key.startsWith(normalized) && !used.has(key));
+    if (found) {
+      used.add(found[0]);
+      matches.push(found[1]);
+    }
+    return matches;
+  }, []);
+}
+
+function choicePairs(tokens) {
+  const letters = tokens.filter((token) => /^[A-Z]$/.test(token));
+  const numbers = tokens.filter((token) => /^\d+$/.test(token));
+  if (letters.length && numbers.length) {
+    return letters.map((letter, index) => ({ letter, number: numbers[index] || String(index + 1) }));
+  }
+  return letters.map((letter, index) => ({ letter, number: String(index + 1) }));
+}
+
+function buildOptionMessageMap(paragraphs) {
+  const map = new Map();
+  let letter = '';
+  let number = '';
+  let buffer = [];
+
+  const flush = () => {
+    if (letter && number && buffer.length) {
+      map.set(`${letter}${number}`, buffer.join('\n'));
+    }
+    buffer = [];
+  };
+
+  paragraphs.forEach((paragraph) => {
+    const nextLetter = paragraphToken(paragraph, 'letter');
+    const nextNumber = paragraphToken(paragraph, 'number');
+
+    if (nextLetter) {
+      flush();
+      letter = nextLetter;
+      number = '';
+      return;
+    }
+
+    if (nextNumber && letter) {
+      flush();
+      number = nextNumber;
+      buffer = [paragraph];
+      return;
+    }
+
+    if (letter && number) {
+      buffer.push(paragraph);
     }
   });
-  return matches;
+
+  flush();
+  return map;
 }
 
 async function renderArticle() {
